@@ -16,27 +16,38 @@ class MoviesController < ApplicationController
     @sort = params[:sort]
     @select = params[:ratings]
 
-    if (@sort!=nil && @select!=nil)
+    if (@sort!=nil && @select!={})
       flash.keep
       @movies =  Movie.where(:rating => @select.keys).order(@sort + ' ASC')
     end
-    
+ 
     if @select!=nil
+	    session[:savedRatings] = @select
+	    if (session[:savedSortVal]!=nil)
+	    	@movies = Movie.where(:rating => @select.keys).order(session[:savedSortVal] + ' ASC')
+	    else
 	      @movies = Movie.where(:rating => @select.keys)
+	    end
     else
-       @select = {}
+      @select = {}
     end
 
     if @sort!=nil
+      session[:savedSortVal] = @sort
       if @select!={}
         @movies = Movie.where(:rating => @select.keys).order(@sort + ' ASC')
       else
 	      @movies = Movie.order(@sort + ' ASC')
 	    end
     end
+
+    if (@sort==nil && @select=={} && (session[:savedSortVal]!=nil or session[:savedRatings]!=nil))
+      flash.keep
+	    redirect_to movies_path(:sort => session[:savedSortVal], :ratings => session[:savedRatings])
+    end
     @movies
   end
-
+	
   def new
     # default: render 'new' template
   end
